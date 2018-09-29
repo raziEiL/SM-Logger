@@ -34,7 +34,7 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	SMLoggerInit(LOG_TAGS, sizeof(LOG_TAGS), LOG_FLAGS, OUT_FLAGS); // setup debug
-	RegServerCmd("sm_debug", Log_Command); // test cmd
+	RegServerCmd("sm_logtest", LogTest_Command); // test cmd
 	RegServerCmd("sm_bench", Benchmark_Command); // benchmark test
 }
 
