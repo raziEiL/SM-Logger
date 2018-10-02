@@ -34,7 +34,7 @@
 #if defined _logger_included
  #endinput
 #endif
-#define _logger_included "1.0"
+#define _logger_included "1.1"
 
 // Output bits
 enum (<<= 1)
@@ -44,14 +44,14 @@ enum (<<= 1)
 	SML_TO_CHAT
 }
 
-#define SML_TAG_MAX_LEN		96
-#define SML_TAG				"[SM LOGGER]"
-#define SML_CVAR_DESCR		"Logs bit flags (add numbers together): 0=Disable"
+#define SML_TAG_SIZE		96
+#define SML_TAB_SIZE		10
+#define SML_TAG				"[SM-LOGGER]"
 
 static File g_fileLog;
 static ArrayList g_hTagList;
-static char g_sFormattedStr[1024];
-static int g_iTagIndex, g_iCvarLogFlags, g_iCvarLogOutFlags;
+static char g_sFormattedStr[1024], SML_TAB[SML_TAB_SIZE][SML_TAB_SIZE];
+static int g_iTagIndex, g_iTabIndex, g_iCvarLogFlags, g_iCvarLogOutFlags;
 
 stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int outFlags = 0)
 {
@@ -82,13 +82,15 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 		return;
 	}
 
+	SMLoggerTabChar('\t');
+	
 	char sCvar[PLATFORM_MAX_PATH], sValue[20];
 	ConVar cVar;
 	int iPowerOfTwo, iFlagsSum;
 
-	sTemp = SML_CVAR_DESCR;
+	sTemp = "Logs bit flags (add numbers together): 0=Disable";
 	
-	g_hTagList = new ArrayList(SML_TAG_MAX_LEN);
+	g_hTagList = new ArrayList(SML_TAG_SIZE);
 	for (i = 0; i < size; i++){
 		g_hTagList.PushString(tags[i]);
 		iPowerOfTwo = RoundFloat(Pow(2.0, (float(i)+1.0)));
@@ -120,6 +122,30 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 	//PrintToServer("'%s' '%s'", sCvar, sValue);
 	SMLogEx(SML_TO_FILE, "%s %s %s", SML_TAG, sTemp, sCvar);
 }
+
+stock void SMLoggerTabChar(char c)
+{
+	if (c == SML_TAB[1][0])
+		return;
+
+	for (int i = 1; i < SML_TAB_SIZE; i++){
+		SML_TAB[i] = "";
+		SML_TAB[i][0] = c;
+		if (i > 1)
+			StrCat(SML_TAB[i], sizeof(SML_TAB[]), SML_TAB[i-1]);
+	}
+}
+
+stock void SMLoggerTab(int tabsize)
+{
+	if (tabsize >= SML_TAB_SIZE)
+		g_iTabIndex = SML_TAB_SIZE-1;
+	else if (tabsize < 0)
+		g_iTabIndex = 0;
+	else
+		g_iTabIndex = tabsize;
+}
+
 // Respetc logger convars. Converts bit to tag.
 stock void SMLogTag(int bit, const char[] format, any ...)
 {
@@ -168,8 +194,10 @@ stock void SMLogEx(int outFlags, const char[] format, any ...)
 
 static stock void SMLogger(int bit, int outFlags, int client)
 {
-	static char sTemp[SML_TAG_MAX_LEN];
+	static char sTemp[SML_TAG_SIZE];
 
+	if (g_iTabIndex)
+		Format(g_sFormattedStr, sizeof(g_sFormattedStr), "%s%s", SML_TAB[g_iTabIndex], g_sFormattedStr);
 	if (bit){
 		g_hTagList.GetString(g_iTagIndex, sTemp, sizeof(sTemp));
 		Format(g_sFormattedStr, sizeof(g_sFormattedStr), "[%s] %s", sTemp, g_sFormattedStr);
