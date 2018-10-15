@@ -28,7 +28,7 @@ public Plugin myinfo =
 	name = "SM Logger Demonstration",
 	author = "raziEiL [disawar1]",
 	description = "blah",
-	version = "1.1",
+	version = "1.3",
 	url = "http://steamcommunity.com/id/raziEiL"
 }
 
@@ -48,9 +48,10 @@ public Action LogTest_Command(int argc)
 	SMLogEx(SML_TO_SERVER, "SMLogEx(SML_TO_SERVER, \"...\")"); // Expected Behavior: Logs to server|Without tags. Actual Behavior: Okay!
 	SMLogTag(SML_CORE, "SMLogTag(SML_CORE, \"...\")"); // Expected Behavior: Logs everywhere|Tags:CORE. Actual Behavior: Okay!
 	SMLogTag(SML_EXAMPLE, "SMLogTag(SML_EXAMPLE, \"...\")"); // Expected Behavior: Logs everywhere|Tags:EXAMPLE. Actual Behavior: Okay!
+	SMLogTag(SML_EXAMPLE, "%sSMLogTag(SML_EXAMPLE, \"2 tabs here\")", SMLoggerGetTab(2));
 	SMLogTagEx(SML_CORE, SML_TO_SERVER, "SMLogTagEx(SML_CORE, SML_TO_SERVER, \"...\")"); // Expected Behavior: Logs to server|Tags:CORE. Actual Behavior: Okay!
 	SMLogTagEx(SML_EXAMPLE, SML_TO_FILE, "SMLogTagEx(SML_EXAMPLE, SML_TO_FILE, \"...\")"); // Expected Behavior: Logs to file|Tags:EXAMPLE. Actual Behavior: Okay!
-	
+
 	// See error logs
 	LogError("----------Bad eg.-----------");
 	SMLogTag(3, "This is not power of two!"); // Expected Behavior: Error. Actual Behavior: Okay!
@@ -59,34 +60,34 @@ public Action LogTest_Command(int argc)
 	SMLogEx(SML_TO_FILE, "----------Tab test 1-----------");
 	SMLogEx(SML_TO_FILE, "deep 1");
 	SMLogEx(SML_TO_FILE, "{");
-	SMLoggerTab(1);
-	int x;
-	for (int i = 0; i < 3; i++){
+	SMLoggerSetTab(1);
+	int x, i;
+	for (i = 0; i < 3; i++){
 		SMLogEx(SML_TO_FILE, "index=%d", i);
 		SMLogEx(SML_TO_FILE, "tick=%d", GetGameTickCount());
 		SMLogEx(SML_TO_FILE, "gametime=%f", GetGameTime());
 
 		SMLogEx(SML_TO_FILE, "deep 2");
 		SMLogEx(SML_TO_FILE, "{");
-		SMLoggerTab(2);
+		SMLoggerSetTab(2);
 		for (x = 0; x < 5; x++){
 			SMLogEx(SML_TO_FILE, "index2=%d", x);
 			SMLogEx(SML_TO_FILE, "sum=%d", i+x);
 		}
-		SMLoggerTab(1);
+		SMLoggerSetTab(1);
 		SMLogEx(SML_TO_FILE, "}");
 	}
-	SMLoggerTab(0);
+	SMLoggerSetTab(0);
 	SMLogEx(SML_TO_FILE, "}");
 	
 	SMLogEx(SML_TO_FILE, "----------Tab test 2-----------");
 	SMLoggerTabChar('.');
-	for (int i = 0; i < SML_TAB_SIZE; i++){
-		SMLoggerTab(i);
+	for (i = 0; i < SML_TAB_SIZE; i++){
+		SMLoggerSetTab(i);
 		SMLogEx(SML_TO_FILE, "stairs");
 	}
 	SMLoggerTabChar('\t');
-	SMLoggerTab(0);
+	SMLoggerSetTab(0);
 }
 
 public Action LogCvar_Command(int argc)

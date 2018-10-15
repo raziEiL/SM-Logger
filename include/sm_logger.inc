@@ -34,7 +34,7 @@
 #if defined _logger_included
  #endinput
 #endif
-#define _logger_included "1.1"
+#define _logger_included "1.2"
 
 // Output bits
 enum (<<= 1)
@@ -44,6 +44,7 @@ enum (<<= 1)
 	SML_TO_CHAT
 }
 
+#define SML_SAFETY_CODE		1 // 0: optimization, 1: don't throw an error if you have code mistake
 #define SML_TAG_SIZE		96
 #define SML_TAB_SIZE		10
 #define SML_TAG				"[SM-LOGGER]"
@@ -90,10 +91,10 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 
 	sTemp = "Logs bit flags (add numbers together): 0=Disable";
 	
-	g_hTagList = new ArrayList(SML_TAG_SIZE);
+	g_hTagList = new ArrayList(ByteCountToCells(SML_TAG_SIZE));
 	for (i = 0; i < size; i++){
 		g_hTagList.PushString(tags[i]);
-		iPowerOfTwo = RoundFloat(Pow(2.0, (float(i)+1.0)));
+		iPowerOfTwo = RoundFloat(Pow(2.0, float(i)));
 		iFlagsSum += iPowerOfTwo;
 		Format(sTemp, sizeof(sTemp), "%s, %d=%s", sTemp, iPowerOfTwo, tags[i]);
 	}
@@ -136,13 +137,20 @@ stock void SMLoggerTabChar(char c)
 	}
 }
 
-stock void SMLoggerTab(int tabsize)
+stock char SMLoggerGetTab(int tabsize)
 {
+	return SML_TAB[tabsize];
+}
+
+stock void SMLoggerSetTab(int tabsize)
+{
+#if SML_SAFETY_CODE
 	if (tabsize >= SML_TAB_SIZE)
 		g_iTabIndex = SML_TAB_SIZE-1;
 	else if (tabsize < 0)
 		g_iTabIndex = 0;
 	else
+#endif
 		g_iTabIndex = tabsize;
 }
 
@@ -225,14 +233,19 @@ static stock bool IsLogAllowed(int bit)
 {
 	if (!(g_iCvarLogFlags & bit))
 		return false;
+	
+	g_iTagIndex = GetIndexByBit(bit)-1;
+
+#if SML_SAFETY_CODE
 	if (!IsPowerOfTwo(bit)){
 		LogError("%s Bit value %d is not power of two!", SML_TAG, bit);
 		return false;
 	}
-	if ((g_iTagIndex = GetIndexByBit(bit)-1) >= g_hTagList.Length){
+	if (g_iTagIndex >= g_hTagList.Length){
 		LogError("%s Tag array index out of bound %d/%d", SML_TAG, g_iTagIndex, g_hTagList.Length);
 		return false;
 	}
+#endif
 	return true;
 }
 
