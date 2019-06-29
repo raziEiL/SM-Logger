@@ -16,8 +16,8 @@ A lot I/O operation (e.g. log spamming) can lead to server lags and bad gaming e
 The log file has the name equivalent to plugin name but lower case letters (spaces ` `  will be replaced by underscores `_`). Let's call that name as **SMLOGGER_NAME**. The log file will be created in **sourcemod/logs** folder. 
 
 The API provide two convars:  
-**SMLOGGER_NAME**_log_flags - Outputs bit channels flags (add numbers together): *defined by developer*  
-**SMLOGGER_NAME**_log_outputs - Outputs bit flags (add numbers together): 0=Disable, 1=Logs to file, 2=Prints to server, 4=Prints to chat, 7=all
+**SMLOGGER_NAME**_log_channel - Outputs bit channel flags (add numbers together): *defined by developer*  
+**SMLOGGER_NAME**_log_output - Outputs bit flags (add numbers together): 0=Disable, 1=Logs to file, 2=Prints to server, 4=Prints to chat, 7=all
 
 ## Setup
 
@@ -57,3 +57,6 @@ Log file:
     06/29/2019 - 21:23:30 [CORE] OnMapStart
     06/29/2019 - 21:23:30 [WARNING] l4d2 lib is removed!
 For more examples see [logger_test](https://github.com/raziEiL/SM-Logger/blob/master/scripting/logger_test.sp "logger_test") plugin.
+
+## Donation
+My cat wants a new toy! I try to make quality and beautiful toys for my beloved cat. I create toys in my spare time but sometimes I can step into a tangle and get confused! Oops! It takes time to get out! When the toy is ready I give it to the cat, the GitHub cat and the community can also play with it. So if you enjoy my toys and want to thank me for my work, you can send any amount. All money will be spent on milk! [Donate :feet:](https://www.paypal.me/razicat)
