@@ -1,4 +1,4 @@
-## SM Logger
+# SM Logger
 The API for SourceMod plugin developers.
 
 ## About
@@ -12,11 +12,11 @@ The main goal of SM Logger is to make debugging plugins easier and don't choke w
 ## Note
 A lot I/O operation (e.g. log spamming) can lead to server lags and bad gaming experience. SM Logger keeps a log file always open, so it reduce I/O operation and lead to more speed and may solve the lag problem.
 
-# Naming
-The log file has the name equivalent to plugin name but lower case letters (spaces ` ` will be replaced by underscores `_`). Let's call that name as **SMLOGGER_NAME**. The log file will be created in **sourcemod/logs** folder. 
+## Naming
+The log file has the name equivalent to plugin name but lower case letters (spaces ` `  will be replaced by underscores `_`). Let's call that name as **SMLOGGER_NAME**. The log file will be created in **sourcemod/logs** folder. 
 
-The API provide two convars:
-**SMLOGGER_NAME**_log_flags - Outputs bit channels flags (add numbers together): *defined by developer*
+The API provide two convars:  
+**SMLOGGER_NAME**_log_flags - Outputs bit channels flags (add numbers together): *defined by developer*  
 **SMLOGGER_NAME**_log_outputs - Outputs bit flags (add numbers together): 0=Disable, 1=Logs to file, 2=Prints to server, 4=Prints to chat, 7=all
 
 ## Setup
