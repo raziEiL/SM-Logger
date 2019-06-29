@@ -41,7 +41,7 @@ public void OnPluginStart()
 	RegServerCmd("sm_logbench", LogBench_Command); // benchmark test
 }
 
-// log result -> logger_test.log
+// logs results: https://github.com/raziEiL/SM-Logger/blob/master/logs/logger_test.log
 public Action LogTest_Command(int argc)
 {
 	SMLog("----------Good eg.-----------");
