@@ -3,9 +3,9 @@
  * =============================================================================
  * sm_logger
  * Provides a simple set of functions for logging and debugging.
- * https://github.com/raziEiL/SM-Logger
+ * GitHub: https://github.com/raziEiL/SM-Logger
  *
- * sm_logger (C)2018 raziEiL [disawar1] <mr.raz4291@gmail.com>
+ * sm_logger (C)2018-2019 raziEiL [disawar1] <mr.raz4291@gmail.com>
  * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
@@ -34,27 +34,45 @@
 #if defined _logger_included
  #endinput
 #endif
-#define _logger_included "1.2"
+#define _logger_included "1.3"
 
-// Output bits
-enum (<<= 1)
+// Output log bits
+enum SMLOutFlags
 {
-	SML_TO_FILE = 1,
-	SML_TO_SERVER,
-	SML_TO_CHAT
+	SML_NONE = (0<<0), // Disable
+	SML_FILE = (1<<0), // Logs to file
+	SML_SERVER = (1<<1), // Prints to server
+	SML_CHAT = (1<<2), // Prints to chat
+	SML_ALL = SML_FILE|SML_SERVER|SML_CHAT // Spam!
 }
 
-#define SML_SAFETY_CODE		1 // 0: optimization, 1: don't throw an error if you have code mistake
+// Preprocessor
+#define SML_SAFETY_CODE	1 // 0: optimization, 1: don't throw an error if you have code mistake
+#define SML_LOWERCASE		1 // 0: none, 1: sets logfile/cvar names to lowercase
+// Core
 #define SML_TAG_SIZE		96
 #define SML_TAB_SIZE		10
 #define SML_TAG				"[SM-LOGGER]"
-
+// Private vars
 static File g_fileLog;
 static ArrayList g_hTagList;
 static char g_sFormattedStr[1024], SML_TAB[SML_TAB_SIZE][SML_TAB_SIZE];
-static int g_iTagIndex, g_iTabIndex, g_iCvarLogFlags, g_iCvarLogOutFlags;
+static int g_iTagIndex, g_iTabIndex, g_iCvarLogFlags;
+static SMLOutFlags g_iCvarLogOutFlags;
 
-stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int outFlags = 0)
+/**
+ * Initializes internal structure necessary for sm_logger.inc functions.
+ * @remark IT NECESSARY TO RUN THIS FUNCTION OnPluginStart()!
+ *
+ * @param tags			2D string array, contain a log tags.
+ * @param size			Number of string (first dimension size of tags string).
+ * @param bitFlags		Default log bits.
+ * @param outFlags		Default output bits.
+ * @param truncate		True to delete the content of existing file, false otherwise.
+ *
+ * @noreturn
+ */
+stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, SMLOutFlags outFlags = SML_NONE, bool truncate = false)
 {
 	static bool bIsInit;
 	if (bIsInit)
@@ -66,17 +84,18 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 	GetPluginFilename(GetMyHandle(), sSelf, PLATFORM_MAX_PATH);
 	sSelf[strlen(sSelf) - 4] = 0; // removes '.smx'
 
-	if ((i = FindCharInString(sSelf, '\\', true)) != -1)
+	if ((i = FindCharInString(sSelf, '\\', true)) != -1 || (i = FindCharInString(sSelf, '/', true)) != -1)
 		Format(sSelf, sizeof(sSelf), sSelf[i+1]); // removes sub-folder path
 	// filter
 	ReplaceString(sSelf, sizeof(sSelf), " ", "_");
+#if SML_LOWERCASE
 	i = strlen(sSelf);
 	for (int c = 0; c < i; c++)
 		sSelf[c] = CharToLower(sSelf[c]);
-
+#endif
 	FormatEx(sTemp, sizeof(sTemp), "logs/%s.log", sSelf);
 	BuildPath(Path_SM, sTemp, sizeof(sTemp), sTemp);
-	g_fileLog = OpenFile(sTemp, "a");
+	g_fileLog = OpenFile(sTemp, truncate ? "w" : "a");
 
 	if (g_fileLog == null){
 		LogError("%s File logs/%s.log could not be opened!", SML_TAG, sSelf);
@@ -84,13 +103,13 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 	}
 
 	SMLoggerTabChar('\t');
-	
+
 	char sCvar[PLATFORM_MAX_PATH], sValue[20];
 	ConVar cVar;
 	int iPowerOfTwo, iFlagsSum;
 
 	sTemp = "Logs bit flags (add numbers together): 0=Disable";
-	
+
 	g_hTagList = new ArrayList(ByteCountToCells(SML_TAG_SIZE));
 	for (i = 0; i < size; i++){
 		g_hTagList.PushString(tags[i]);
@@ -98,42 +117,40 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 		iFlagsSum += iPowerOfTwo;
 		Format(sTemp, sizeof(sTemp), "%s, %d=%s", sTemp, iPowerOfTwo, tags[i]);
 	}
-	
+
 	g_iCvarLogOutFlags = outFlags;
 	g_iCvarLogFlags = bitFlags;
-	bIsInit = true;	
+	bIsInit = true;
 
 	IntToString(bitFlags, sValue, sizeof(sValue));
 	FormatEx(sCvar, sizeof(sCvar), "%s_log_flags", sSelf);
 	cVar = CreateConVar(sCvar, sValue, sTemp, FCVAR_NOTIFY, true, 0.0);
-	
-	#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
+#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
 	cVar.SetInt(bitFlags);
 	cVar.AddChangeHook(SML_ch_Flags);
-	#else
+#else
 	SetConVarInt(cVar, bitFlags);
 	HookConVarChange(cVar, SML_ch_Flags);
-	#endif
-	
+#endif
+
 	//PrintToServer("'%s' '%s' '%s'", sCvar, sValue, sTemp);
-	SMLogEx(SML_TO_FILE, "%s SM-Logger v%s initialized", SML_TAG, _logger_included);
-	SMLogEx(SML_TO_FILE, "%s Defined flags (Sum=%d): %s", SML_TAG, iFlagsSum, sTemp[39]);
+	SMLogEx(SML_FILE, "%s SM-Logger v%s initialized", SML_TAG, _logger_included);
+	SMLogEx(SML_FILE, "%s Defined flags (Sum=%d): %s", SML_TAG, iFlagsSum, sTemp[39]);
 	FormatEx(sTemp, sizeof(sTemp), "ConVars: %s,", sCvar);
 
-	IntToString(outFlags, sValue, sizeof(sValue));
+	IntToString(view_as<int>(outFlags), sValue, sizeof(sValue));
 	FormatEx(sCvar, sizeof(sCvar), "%s_log_outputs", sSelf);
-	cVar = CreateConVar(sCvar, sValue, "Outputs bit flags (add numbers together): 0=Disable, 1=Logs to file, 2=Prints to server, 4=Prints to chat", FCVAR_NOTIFY, true, 0.0);
-	
-	#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
-	cVar.SetInt(outFlags);
+	cVar = CreateConVar(sCvar, sValue, "Outputs bit flags (add numbers together): 0=Disable, 1=Logs to file, 2=Prints to server, 4=Prints to chat, 7=all", FCVAR_NOTIFY, true, 0.0, true, float(view_as<int>(SML_ALL)));
+#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
+	cVar.SetInt(view_as<int>(outFlags));
 	cVar.AddChangeHook(SML_ch_OutFlags);
-	#else
-	SetConVarInt(cVar, outFlags);
+#else
+	SetConVarInt(cVar, view_as<int>(outFlags));
 	HookConVarChange(cVar, SML_ch_OutFlags);
-	#endif
-	
+#endif
+
 	//PrintToServer("'%s' '%s'", sCvar, sValue);
-	SMLogEx(SML_TO_FILE, "%s %s %s", SML_TAG, sTemp, sCvar);
+	SMLogEx(SML_FILE, "%s %s %s", SML_TAG, sTemp, sCvar);
 }
 
 stock void SMLoggerTabChar(char c)
@@ -166,7 +183,7 @@ stock void SMLoggerSetTab(int tabsize)
 		g_iTabIndex = tabsize;
 }
 
-// Respetc logger convars. Converts bit to tag.
+// Respect logger convars. Converts bit to tag.
 stock void SMLogTag(int bit, const char[] format, any ...)
 {
 	if (!g_iCvarLogOutFlags || !IsLogAllowed(bit))
@@ -175,8 +192,8 @@ stock void SMLogTag(int bit, const char[] format, any ...)
 	VFormat(g_sFormattedStr, sizeof(g_sFormattedStr), format, 3);
 	SMLogger(bit, g_iCvarLogOutFlags, 0);
 }
-// Uses SMLog behavor but overwrite outputs cvar flags value
-stock void SMLogTagEx(int bit, int outFlags, const char[] format, any ...)
+// Uses SMLog behavior but overwrite outputs cvar flags value
+stock void SMLogTagEx(int bit, SMLOutFlags outFlags, const char[] format, any ...)
 {
 	if (!outFlags || !IsLogAllowed(bit))
 		return;
@@ -184,7 +201,7 @@ stock void SMLogTagEx(int bit, int outFlags, const char[] format, any ...)
 	VFormat(g_sFormattedStr, sizeof(g_sFormattedStr), format, 4);
 	SMLogger(bit, outFlags, 0);
 }
-// Uses SMLog behavor but prints to specific client insted of all chat
+// Uses SMLog behavior but prints to specific client instead of all chat
 stock void SMLogClient(int bit, int client, const char[] format, any ...)
 {
 	if (!g_iCvarLogOutFlags || !IsLogAllowed(bit))
@@ -203,7 +220,7 @@ stock void SMLog(const char[] format, any ...)
 	SMLogger(0, g_iCvarLogOutFlags, 0);
 }
 // Logging without tagging. Overwrite outputs cvar flags value
-stock void SMLogEx(int outFlags, const char[] format, any ...)
+stock void SMLogEx(SMLOutFlags outFlags, const char[] format, any ...)
 {
 	if (!outFlags)
 		return;
@@ -211,8 +228,12 @@ stock void SMLogEx(int outFlags, const char[] format, any ...)
 	VFormat(g_sFormattedStr, sizeof(g_sFormattedStr), format, 3);
 	SMLogger(0, outFlags, 0);
 }
-
-static stock void SMLogger(int bit, int outFlags, int client)
+/*
+|--------------------------------------------------------------------------
+| SM_LOGGER PRIVATE STRUCTURE
+|--------------------------------------------------------------------------
+*/
+static stock void SMLogger(int bit, SMLOutFlags outFlags, int client)
 {
 	static char sTemp[SML_TAG_SIZE];
 
@@ -222,7 +243,7 @@ static stock void SMLogger(int bit, int outFlags, int client)
 		g_hTagList.GetString(g_iTagIndex, sTemp, sizeof(sTemp));
 		Format(g_sFormattedStr, sizeof(g_sFormattedStr), "[%s] %s", sTemp, g_sFormattedStr);
 	}
-	if (outFlags & SML_TO_CHAT){
+	if (outFlags & SML_CHAT){
 
 		if (!client)
 			PrintToChatAll(g_sFormattedStr);
@@ -233,11 +254,11 @@ static stock void SMLogger(int bit, int outFlags, int client)
 	FormatTime(sTemp, sizeof(sTemp), "%m/%d/%Y - %H:%M:%S");
 	Format(g_sFormattedStr, sizeof(g_sFormattedStr), "%s %s", sTemp, g_sFormattedStr);
 
-	if (outFlags & SML_TO_FILE){
+	if (outFlags & SML_FILE){
 		g_fileLog.WriteLine(g_sFormattedStr);
 		FlushFile(g_fileLog);
 	}
-	if (outFlags & SML_TO_SERVER)
+	if (outFlags & SML_SERVER)
 		PrintToServer(g_sFormattedStr);
 }
 
@@ -245,7 +266,7 @@ static stock bool IsLogAllowed(int bit)
 {
 	if (!(g_iCvarLogFlags & bit))
 		return false;
-	
+
 	g_iTagIndex = GetIndexByBit(bit)-1;
 
 #if SML_SAFETY_CODE
@@ -291,5 +312,5 @@ public void SML_ch_OutFlags(ConVar convar, const char[] oldValue, const char[] n
 #endif
 {
 	if (!StrEqual(oldValue, newValue))
-		g_iCvarLogOutFlags = convar.IntValue;
+		g_iCvarLogOutFlags = view_as<SMLOutFlags>(convar.IntValue);
 }
