@@ -108,7 +108,7 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, SMLOutF
 	ConVar cVar;
 	int iPowerOfTwo, iFlagsSum;
 
-	sTemp = "Outputs bit channels flags (add numbers together): 0=Disable";
+	sTemp = "Outputs bit channel flags (add numbers together): 0=Disable";
 
 	g_hTagList = new ArrayList(ByteCountToCells(SML_TAG_SIZE));
 	for (i = 0; i < size; i++){
@@ -123,7 +123,7 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, SMLOutF
 	bIsInit = true;
 
 	IntToString(bitFlags, sValue, sizeof(sValue));
-	FormatEx(sCvar, sizeof(sCvar), "%s_log_flags", sSelf);
+	FormatEx(sCvar, sizeof(sCvar), "%s_log_channel", sSelf);
 	cVar = CreateConVar(sCvar, sValue, sTemp, FCVAR_NOTIFY, true, 0.0);
 #if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
 	cVar.SetInt(bitFlags);
@@ -139,7 +139,7 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, SMLOutF
 	FormatEx(sTemp, sizeof(sTemp), "ConVars: %s,", sCvar);
 
 	IntToString(view_as<int>(outFlags), sValue, sizeof(sValue));
-	FormatEx(sCvar, sizeof(sCvar), "%s_log_outputs", sSelf);
+	FormatEx(sCvar, sizeof(sCvar), "%s_log_output", sSelf);
 	cVar = CreateConVar(sCvar, sValue, "Outputs bit flags (add numbers together): 0=Disable, 1=Logs to file, 2=Prints to server, 4=Prints to chat, 7=all", FCVAR_NOTIFY, true, 0.0, true, float(view_as<int>(SML_ALL)));
 #if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
 	cVar.SetInt(view_as<int>(outFlags));
