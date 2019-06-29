@@ -108,7 +108,7 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, SMLOutF
 	ConVar cVar;
 	int iPowerOfTwo, iFlagsSum;
 
-	sTemp = "Logs bit flags (add numbers together): 0=Disable";
+	sTemp = "Outputs bit channels flags (add numbers together): 0=Disable";
 
 	g_hTagList = new ArrayList(ByteCountToCells(SML_TAG_SIZE));
 	for (i = 0; i < size; i++){
