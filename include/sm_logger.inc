@@ -106,8 +106,14 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 	IntToString(bitFlags, sValue, sizeof(sValue));
 	FormatEx(sCvar, sizeof(sCvar), "%s_log_flags", sSelf);
 	cVar = CreateConVar(sCvar, sValue, sTemp, FCVAR_NOTIFY, true, 0.0);
+	
+	#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
 	cVar.SetInt(bitFlags);
 	cVar.AddChangeHook(SML_ch_Flags);
+	#else
+	SetConVarInt(cVar, bitFlags);
+	HookConVarChange(cVar, SML_ch_Flags);
+	#endif
 	
 	//PrintToServer("'%s' '%s' '%s'", sCvar, sValue, sTemp);
 	SMLogEx(SML_TO_FILE, "%s SM-Logger v%s initialized", SML_TAG, _logger_included);
@@ -117,8 +123,14 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, int out
 	IntToString(outFlags, sValue, sizeof(sValue));
 	FormatEx(sCvar, sizeof(sCvar), "%s_log_outputs", sSelf);
 	cVar = CreateConVar(sCvar, sValue, "Outputs bit flags (add numbers together): 0=Disable, 1=Logs to file, 2=Prints to server, 4=Prints to chat", FCVAR_NOTIFY, true, 0.0);
+	
+	#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
 	cVar.SetInt(outFlags);
 	cVar.AddChangeHook(SML_ch_OutFlags);
+	#else
+	SetConVarInt(cVar, outFlags);
+	HookConVarChange(cVar, SML_ch_OutFlags);
+	#endif
 	
 	//PrintToServer("'%s' '%s'", sCvar, sValue);
 	SMLogEx(SML_TO_FILE, "%s %s %s", SML_TAG, sTemp, sCvar);
@@ -262,13 +274,21 @@ static stock bool IsPowerOfTwo(int n)
 	return n && (!(n & (n - 1)));
 }
 
+#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
 static stock void SML_ch_Flags(ConVar convar, const char[] oldValue, const char[] newValue)
+#else
+public void SML_ch_Flags(ConVar convar, const char[] oldValue, const char[] newValue)
+#endif
 {
 	if (!StrEqual(oldValue, newValue))
 		g_iCvarLogFlags = convar.IntValue;
 }
 
+#if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
 static stock void SML_ch_OutFlags(ConVar convar, const char[] oldValue, const char[] newValue)
+#else
+public void SML_ch_OutFlags(ConVar convar, const char[] oldValue, const char[] newValue)
+#endif
 {
 	if (!StrEqual(oldValue, newValue))
 		g_iCvarLogOutFlags = convar.IntValue;
