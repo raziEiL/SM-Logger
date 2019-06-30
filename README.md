@@ -35,7 +35,7 @@ The API provide two convars:
     
     public void OnPluginStart()
     {
-    	SMLoggerInit(LOG_TAGS, sizeof(LOG_TAGS), SML_CORE|SML_EXAMPLE, SML_FILE); // setup logger
+    	SMLoggerInit(LOG_TAGS, sizeof(LOG_TAGS), SML_CORE|SML_WARN, SML_FILE); // setup logger
     }
 
 Now you can use any of SMLog functions.
