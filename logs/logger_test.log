@@ -1,6 +1,6 @@
 06/29/2019 - 21:14:15 [SM-LOGGER] SM-Logger v1.3 initialized
 06/29/2019 - 21:14:15 [SM-LOGGER] Defined flags (Sum=3): 0=Disable, 1=CORE, 2=EXAMPLE
-06/29/2019 - 21:14:15 [SM-LOGGER] ConVars: logger_test_log_flags, logger_test_log_outputs
+06/29/2019 - 21:14:15 [SM-LOGGER] ConVars: logger_test_log_channel, logger_test_log_output
 06/29/2019 - 21:15:25 ----------Good eg.-----------
 06/29/2019 - 21:15:25 SMLogTag("...")
 06/29/2019 - 21:15:25 [CORE] SMLogTag(SML_CORE, "...")
