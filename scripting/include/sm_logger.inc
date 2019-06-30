@@ -66,13 +66,13 @@ static SMLOutFlags g_iCvarLogOutFlags;
  *
  * @param tags			2D string array, contain a log tags.
  * @param size			Number of string (first dimension size of tags string).
- * @param bitFlags		Default log bits.
+ * @param channelFlags	Default channel bits.
  * @param outFlags		Default output bits.
  * @param truncate		True to delete the content of existing file, false otherwise.
  *
  * @noreturn
  */
-stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, SMLOutFlags outFlags = SML_NONE, bool truncate = false)
+stock void SMLoggerInit(const char[][] tags, int size, int channelFlags = 0, SMLOutFlags outFlags = SML_NONE, bool truncate = false)
 {
 	static bool bIsInit;
 	if (bIsInit)
@@ -119,17 +119,17 @@ stock void SMLoggerInit(const char[][] tags, int size, int bitFlags = 0, SMLOutF
 	}
 
 	g_iCvarLogOutFlags = outFlags;
-	g_iCvarLogFlags = bitFlags;
+	g_iCvarLogFlags = channelFlags;
 	bIsInit = true;
 
-	IntToString(bitFlags, sValue, sizeof(sValue));
+	IntToString(channelFlags, sValue, sizeof(sValue));
 	FormatEx(sCvar, sizeof(sCvar), "%s_log_channel", sSelf);
 	cVar = CreateConVar(sCvar, sValue, sTemp, FCVAR_NOTIFY, true, 0.0);
 #if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 8
-	cVar.SetInt(bitFlags);
+	cVar.SetInt(channelFlags);
 	cVar.AddChangeHook(SML_ch_Flags);
 #else
-	SetConVarInt(cVar, bitFlags);
+	SetConVarInt(cVar, channelFlags);
 	HookConVarChange(cVar, SML_ch_Flags);
 #endif
 
@@ -183,32 +183,32 @@ stock void SMLoggerSetTab(int tabsize)
 		g_iTabIndex = tabsize;
 }
 
-// Respect logger convars. Converts bit to tag.
-stock void SMLogTag(int bit, const char[] format, any ...)
+// Respect logger convars. Converts channelFlags to tag.
+stock void SMLogTag(int channelFlags, const char[] format, any ...)
 {
-	if (!g_iCvarLogOutFlags || !IsLogAllowed(bit))
+	if (!g_iCvarLogOutFlags || !IsLogAllowed(channelFlags))
 		return;
 
 	VFormat(g_sFormattedStr, sizeof(g_sFormattedStr), format, 3);
-	SMLogger(bit, g_iCvarLogOutFlags, 0);
+	SMLogger(channelFlags, g_iCvarLogOutFlags, 0);
 }
 // Uses SMLog behavior but overwrite outputs cvar flags value
-stock void SMLogTagEx(int bit, SMLOutFlags outFlags, const char[] format, any ...)
+stock void SMLogTagEx(int channelFlags, SMLOutFlags outFlags, const char[] format, any ...)
 {
-	if (!outFlags || !IsLogAllowed(bit))
+	if (!outFlags || !IsLogAllowed(channelFlags))
 		return;
 
 	VFormat(g_sFormattedStr, sizeof(g_sFormattedStr), format, 4);
-	SMLogger(bit, outFlags, 0);
+	SMLogger(channelFlags, outFlags, 0);
 }
 // Uses SMLog behavior but prints to specific client instead of all chat
-stock void SMLogClient(int bit, int client, const char[] format, any ...)
+stock void SMLogClient(int channelFlags, int client, const char[] format, any ...)
 {
-	if (!g_iCvarLogOutFlags || !IsLogAllowed(bit))
+	if (!g_iCvarLogOutFlags || !IsLogAllowed(channelFlags))
 		return;
 
 	VFormat(g_sFormattedStr, sizeof(g_sFormattedStr), format, 4);
-	SMLogger(bit, g_iCvarLogOutFlags, client);
+	SMLogger(channelFlags, g_iCvarLogOutFlags, client);
 }
 // Logging without tagging. Respect cvar flags value
 stock void SMLog(const char[] format, any ...)
@@ -233,13 +233,13 @@ stock void SMLogEx(SMLOutFlags outFlags, const char[] format, any ...)
 | SM_LOGGER PRIVATE STRUCTURE
 |--------------------------------------------------------------------------
 */
-static stock void SMLogger(int bit, SMLOutFlags outFlags, int client)
+static stock void SMLogger(int channelFlags, SMLOutFlags outFlags, int client)
 {
 	static char sTemp[SML_TAG_SIZE];
 
 	if (g_iTabIndex)
 		Format(g_sFormattedStr, sizeof(g_sFormattedStr), "%s%s", SML_TAB[g_iTabIndex], g_sFormattedStr);
-	if (bit){
+	if (channelFlags){
 		g_hTagList.GetString(g_iTagIndex, sTemp, sizeof(sTemp));
 		Format(g_sFormattedStr, sizeof(g_sFormattedStr), "[%s] %s", sTemp, g_sFormattedStr);
 	}
@@ -262,16 +262,16 @@ static stock void SMLogger(int bit, SMLOutFlags outFlags, int client)
 		PrintToServer(g_sFormattedStr);
 }
 
-static stock bool IsLogAllowed(int bit)
+static stock bool IsLogAllowed(int channelFlags)
 {
-	if (!(g_iCvarLogFlags & bit))
+	if (!(g_iCvarLogFlags & channelFlags))
 		return false;
 
-	g_iTagIndex = GetIndexByBit(bit)-1;
+	g_iTagIndex = GetIndexByBit(channelFlags)-1;
 
 #if SML_SAFETY_CODE
-	if (!IsPowerOfTwo(bit)){
-		LogError("%s Bit value %d is not power of two!", SML_TAG, bit);
+	if (!IsPowerOfTwo(channelFlags)){
+		LogError("%s Bit value %d is not power of two!", SML_TAG, channelFlags);
 		return false;
 	}
 	if (g_iTagIndex >= g_hTagList.Length){
