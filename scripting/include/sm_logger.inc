@@ -5,7 +5,7 @@
  * Provides a simple set of functions for logging and debugging.
  * GitHub: https://github.com/raziEiL/SM-Logger
  *
- * sm_logger (C)2018-2019 raziEiL [disawar1] <mr.raz4291@gmail.com>
+ * sm_logger (C)2018-2020 raziEiL [disawar1] <mr.raz4291@gmail.com>
  * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
@@ -34,7 +34,7 @@
 #if defined _logger_included
  #endinput
 #endif
-#define _logger_included "1.3"
+#define _logger_included "1.4"
 
 // Output log bits
 enum SMLOutFlags
@@ -43,7 +43,8 @@ enum SMLOutFlags
 	SML_FILE = (1<<0), // Logs to file
 	SML_SERVER = (1<<1), // Prints to server
 	SML_CHAT = (1<<2), // Prints to chat
-	SML_ALL = SML_FILE|SML_SERVER|SML_CHAT // Spam!
+	SML_CONSOLE = (1<<3),
+	SML_ALL = SML_FILE|SML_SERVER|SML_CHAT|SML_CONSOLE // Spam!
 }
 
 // Preprocessor
@@ -247,8 +248,11 @@ static stock void SMLogger(int channelFlags, SMLOutFlags outFlags, int client)
 
 		if (!client)
 			PrintToChatAll(g_sFormattedStr);
-		else if (IsClientInGame(client))
+		else if (IsClientInGame(client)){
 			PrintToChat(client, g_sFormattedStr);
+			if (outFlags & SML_CONSOLE)
+				PrintToConsole(client, g_sFormattedStr);
+		}
 	}
 
 	FormatTime(sTemp, sizeof(sTemp), "%m/%d/%Y - %H:%M:%S");
