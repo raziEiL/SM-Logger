@@ -5,7 +5,7 @@
  * Provides a simple set of functions for logging and debugging.
  * GitHub: https://github.com/raziEiL/SM-Logger
  *
- * sm_logger (C)2018-2020 raziEiL [disawar1] <mr.raz4291@gmail.com>
+ * sm_logger (C)2018-2019 raziEiL [disawar1] <mr.raz4291@gmail.com>
  * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
@@ -34,7 +34,7 @@
 #if defined _logger_included
  #endinput
 #endif
-#define _logger_included "1.4"
+#define _logger_included "1.3"
 
 // Output log bits
 enum SMLOutFlags
